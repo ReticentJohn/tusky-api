@@ -45,7 +45,8 @@ const connectForUser = (baseUrl, accessToken, deviceToken) => {
 
     const firebaseMessage = {
       to: deviceToken,
-      priority: 'high',
+      priority: 'normal',
+      content_available: true,
       data: { notification_id: payload.id }
     }
 
