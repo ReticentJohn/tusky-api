@@ -87,7 +87,16 @@ const connectForUser = (baseUrl, accessToken, deviceToken) => {
     }
 
     log('error', `Unexpected close: ${code}`)
-    setTimeout(() => reconnect(), 5000)
+    if (code === 1006)
+    {
+	    log('error', 'Not retrying')
+	    clearInterval(heartbeat)
+	    close()
+    }
+    else
+    {
+	    setTimeout(() => reconnect(), 5000)
+    }
   }
 
   const reconnect = () => {
@@ -101,7 +110,11 @@ const connectForUser = (baseUrl, accessToken, deviceToken) => {
 	  }
 	  else {
 		log('info', 'Connected')
-		heartbeat = setInterval(() => ws.ping(), 1000)
+		heartbeat = setInterval(() => {
+			if (ws.readyState == 1) {
+				ws.ping()
+			}
+		}, 1000)
 	  }
 
     })
