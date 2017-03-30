@@ -75,27 +75,34 @@ const connectForUser = (baseUrl, accessToken, deviceToken) => {
 
   const onError = error => {
     log('error', error)
-    setTimeout(() => reconnect(), 5000)
-  }
-
-  const onClose = code => {
-    if (code === 1000) {
-      log('info', 'Remote server closed connection')
-      clearInterval(heartbeat)
-      close()
-      return
-    }
-
-    log('error', `Unexpected close: ${code}`)
-    if (code === 1006)
-    {
-	    log('error', 'Not retrying')
-	    clearInterval(heartbeat)
-	    close()
+    clearInterval(heartbeat)
+    
+    if (error.message.includes('404')) {
+	    invalidUrl = true
     }
     else
     {
 	    setTimeout(() => reconnect(), 5000)
+    }
+  }
+
+  const onClose = code => {
+  	clearInterval(heartbeat)
+	  
+    if (code === 1000) {
+      log('info', 'Remote server closed connection')
+      close()
+      return
+    }
+
+	if(invalidUrl === false) {
+		log('error', `Unexpected close: ${code}`)
+		setTimeout(() => reconnect(), 5000)
+	}
+    else
+    {
+	    log('error', '404 error, closing')
+	    close()
     }
   }
 
