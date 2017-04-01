@@ -77,12 +77,12 @@ const connectForUser = (baseUrl, accessToken, deviceToken) => {
     log('error', error)
     clearInterval(heartbeat)
     
-    if (error.message.includes('404')) {
+    if (retrycount >= 6) {
 	    invalidUrl = true
     }
     else
     {
-	    setTimeout(() => reconnect(), 5000)
+	    retrycount = retrycount + 1
     }
   }
 
@@ -90,7 +90,6 @@ const connectForUser = (baseUrl, accessToken, deviceToken) => {
   	clearInterval(heartbeat)
 	  
     if (code === 1000) {
-      log('info', 'Remote server closed connection')
       close()
       return
     }
@@ -101,14 +100,14 @@ const connectForUser = (baseUrl, accessToken, deviceToken) => {
 	}
     else
     {
-	    log('error', '404 error, closing')
+	    log('error', 'retry count limit reached, closing')
 	    close()
     }
   }
 
   const reconnect = () => {
     clearInterval(heartbeat)
-
+	
     const ws = new WebSocket(`${baseUrl}/api/v1/streaming/?access_token=${accessToken}&stream=user`)
 
     ws.on('open', () => {
@@ -116,7 +115,7 @@ const connectForUser = (baseUrl, accessToken, deviceToken) => {
 		log('error', `Client state is: ${ws.readyState}`)  
 	  }
 	  else {
-		log('info', 'Connected')
+		retrycount = 0
 		heartbeat = setInterval(() => {
 			if (ws.readyState == 1) {
 				ws.ping()
